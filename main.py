@@ -4,10 +4,11 @@ from telegram.ext import *
 from datetime import date
 import requests
 import json
+import logging
 
 
-def vaccine(city):
-    city_codes = {'1': '581', '2': '18', '3': '13', '4': '5'}
+def vaccine(cities, city):
+    city_codes = {'1': '581', '2': '8', '3': '13', '4': '5'}
     today = date.today()
     d = today.strftime('%d-%m-%y')
 
@@ -23,19 +24,20 @@ def vaccine(city):
        final_text = 'Slots not available'
     else:
        for slots in json_data['sessions']:
-          final_text = final_text + "\nName: "+str(slots['name']) + '\n' + "Available Capacity: "+str(slots['available_capacity']) + '\n' + "Min Age Limit: "+str(slots['min_age_limit']) + '\n' + "Vaccine: "+str(slots['vaccine']) + '\n'
-          final_text = final_text + '----------------------------------------'
+          if slots['available_capacity'] > 0:
+             final_text = final_text + "\nName: "+str(slots['name']) + "\nAddress: "+str(slots['address']) + "\nAvailable Dose1: "+str(slots['available_capacity_dose1']) + "Available Dose2: "+str(slots['available_capacity_dose2']) + '\n' + "Min Age Limit: "+str(slots['min_age_limit']) + '\n' + "Vaccine: "+str(slots['vaccine']) + '\n'
+             final_text = final_text + '----------------------------------------'
+             
     return final_text
 
-
-def start(update, context):
+def start(update: Update, context):
     update.message.reply_text(
-        'Hi there! I can help you in searching for vaccine availability')
+        "Hi there! I can help you find a vaccine since our beloved PM can't")
 
     keyboard = [
         [
             InlineKeyboardButton("Hyderabad", callback_data='1'),
-            InlineKeyboardButton("Vizag", callback_data='2'),
+            InlineKeyboardButton("Visakhapatnam", callback_data='2'),
         ],
         [
             InlineKeyboardButton("Nellore", callback_data='3'),
@@ -47,27 +49,45 @@ def start(update, context):
         'Please choose a city to begin:', reply_markup=reply_markup)
 
 
+    
+
+
 def button(update, context):
     query = update.callback_query
     query.answer()
+    
+    cities = {'1': "Hyderabad", '2': "Visakhapatnam",'3': "Nellore", '4': "Guntur"}
 
-    cities = {'1': "Hyderabad", '2': "Vizag", '3': "Nellore", '4': "Guntur"}
     query.edit_message_text(
         text="Selected city: {}".format(cities[query.data]))
+    city = query.data
+    
+        
 
-    res = vaccine(query.data)
+    res = vaccine(cities, city)
+    if len(res) == 0:
+       query.message.reply_text("There are no available doses")  
+    elif len(res) > 4096:
+       for x in range(0, len(res), 4096):
+          query.message.reply_text(res[x:x+4096])
+         # query.edit_message_text(text = res[x:x+4096])
+    else:
+       query.message.reply_text(res)
+      #  query.edit_message_text(text = res)
+
+    
 
    #  query.edit_message_text(text=res)
 
-    if len(res) > 4096:
-       for x in range(0, len(res), 4096):
-          query.edit_message_text(text = res[x:x+4096])
-    else:
-       query.edit_message_text(text = res)
+   
 
 
 def main():
-
+   
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    logger = logging.getLogger(__name__)
+   
+    
     bot = Bot(token=key.API_KEY)
     print(bot.get_me())
 
@@ -80,4 +100,5 @@ def main():
     updater.idle()
 
 
+city = ''
 main()
