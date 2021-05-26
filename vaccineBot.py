@@ -11,6 +11,8 @@ PORT = int(os.environ.get('PORT', 5000))
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+TOKEN = '1823047614:AAH7vMjilgsf4E4fZV2W3S99Oo6D9nKV2Ag'
+
 
 def vaccine(cities, city):
     city_codes = {'1': '581', '2': '8', '3': '13', '4': '5'}
@@ -76,10 +78,10 @@ def button(update, context):
 
 
 def main():
-    bot = Bot(token=key.API_KEY)
+    bot = Bot(token=TOKEN)
     print(bot.get_me())
 
-    updater = Updater(token=key.API_KEY, use_context=True)
+    updater = Updater(token=TOKEN, use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
@@ -87,8 +89,8 @@ def main():
     # updater.start_polling()
     updater.start_webhook(lisen="0.0.0.0", 
                           port=int(PORT),
-                          url_path=key.API_KEY)
-    updater.bot.setWebhook('https://tranquil-reef-64094.herokuapp.com/' + key.API_KEY)
+                          url_path=TOKEN)
+    updater.bot.setWebhook('https://tranquil-reef-64094.herokuapp.com/' + TOKEN)
     updater.idle()
 
 
