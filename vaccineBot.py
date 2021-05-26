@@ -5,6 +5,11 @@ from datetime import date
 import requests
 import json
 import logging
+import os
+PORT = int(os.environ.get('PORT', 5000))
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def vaccine(cities, city):
@@ -30,6 +35,7 @@ def vaccine(cities, city):
              
     return final_text
 
+
 def start(update: Update, context):
     update.message.reply_text(
         "Hi there! I can help you find a vaccine since our beloved PM can't")
@@ -49,9 +55,6 @@ def start(update: Update, context):
         'Please choose a city to begin:', reply_markup=reply_markup)
 
 
-    
-
-
 def button(update, context):
     query = update.callback_query
     query.answer()
@@ -62,32 +65,17 @@ def button(update, context):
         text="Selected city: {}".format(cities[query.data]))
     city = query.data
     
-        
-
     res = vaccine(cities, city)
     if len(res) == 0:
        query.message.reply_text("There are no available doses")  
     elif len(res) > 4096:
        for x in range(0, len(res), 4096):
           query.message.reply_text(res[x:x+4096])
-         # query.edit_message_text(text = res[x:x+4096])
     else:
        query.message.reply_text(res)
-      #  query.edit_message_text(text = res)
-
-    
-
-   #  query.edit_message_text(text=res)
-
-   
 
 
 def main():
-   
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-    logger = logging.getLogger(__name__)
-   
-    
     bot = Bot(token=key.API_KEY)
     print(bot.get_me())
 
@@ -96,9 +84,12 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
 
-    updater.start_polling()
+    # updater.start_polling()
+    updater.start_webhook(lisen="0.0.0.0", 
+                          port=int(PORT),
+                          url_path=key.API_KEY)
+    updater.bot.setWebhook('https://tranquil-reef-64094.herokuapp.com/' + key.API_KEY)
     updater.idle()
 
 
-city = ''
 main()
